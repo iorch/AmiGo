@@ -1,6 +1,79 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import re
+import copy
+
+
+class Group():
+  def __init__(self, move = None, color = None, board = None):
+    self.COLOR = color
+    self.board = copy.deepcopy(board)
+    self.stones = set([move])
+    self.liberties = set()
+    self.coords = 'abcdefghijklmnopqrs'
+    self.add_stone(move, color, self.board)
+    self.compute_liberties()
+
+
+  def add_stone(self, move = None, color = None, board = None):
+    if not board: board = self.board
+    x = self.get_coord( position=move, which='x' )
+    y = self.get_coord( position=move, which='y' )
+    ctop = None
+    cbottom = None
+    cright = None
+    cleft = None
+    if x < 18:
+      ctop = self.board[x+1][y]
+    if x >  0:
+      cbottom = self.board[x-1][y]
+    if y < 18:
+      cright = self.board[x][y+1]
+    if y >  0:
+      cleft = self.board[x][y-1]
+    if ( ctop == self.COLOR or cbottom == self.COLOR or cright == self.COLOR or cleft == self.COLOR ):
+      if color == self.COLOR:
+        self.stones.add(move)
+    board[ x ][ y ] = color
+    self.board = board
+    self.compute_liberties()
+    return self.stones
+
+  def get_coord( self, position='zz', which='' ):
+    if which == 'x':
+      _coord = re.search(position[ 0 ], self.coords).start()
+    elif which == 'y':
+      _coord = re.search(position[ 1 ], self.coords).start()
+    else:
+      _coord = None
+    return _coord
+
+  def compute_liberties(self):
+    for s in self.stones:
+      x = self.get_coord( position=s, which='x' )
+      y = self.get_coord( position=s, which='y' )
+      if x < 18:
+        top = self.coords[x+1] + self.coords[y]
+        self.liberties.add(top)
+      if x >  0:
+        bottom = self.coords[x-1] + self.coords[y]
+        self.liberties.add(bottom)
+      if y < 18:
+        right = self.coords[x] + self.coords[y+1]
+        self.liberties.add(right)
+      if y >  0:
+        left = self.coords[x] + self.coords[y-1]
+        self.liberties.add(left)
+    _to_remove = set()
+    for l in self.liberties:
+      x = self.get_coord( position=l, which='x' )
+      y = self.get_coord( position=l, which='y' )
+      if self.board[x][y] != '.':
+        _to_remove.add(l)
+    for r in _to_remove:
+      self.liberties.remove(r)
+    return self.liberties
+
 
 
 class Kifu():
@@ -23,7 +96,7 @@ class Kifu():
         'size': 'SZ',
       }
       self.empty = [ [ '.' for i in range(19) ] for j in range(19) ]
-      self.board = self.empty
+      self.board = copy.deepcopy(self.empty)
       self.coords = 'abcdefghijklmnopqrs'
       self.stones = [ ]
       for _line in _info.split('\n'):
@@ -104,6 +177,14 @@ class Kifu():
 
 if __name__ == '__main__':
   k = Kifu('sgfs/kgs-19-2015-05-new/2015-05-27-4.sgf')
+  g = Group('dd', 'B', copy.deepcopy(k.empty))
+  g.add_stone('cd','B')
+  g.add_stone('cc','W')
+
   b = k.starting_board()
   m1 = k.get_position_at(20000)
   print(k.print_board(m1))
+
+  print(g.stones)
+  print(g.liberties)
+  print(g.board)
