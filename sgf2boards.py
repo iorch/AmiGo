@@ -80,8 +80,8 @@ class Group():
 
   def merge(self, group):
     if self.COLOR != group.COLOR: return self
-    if len(self.stones & group.liberties) > 0:
-      self.stones = self.stones | group.stones
+    if len(self.stones & group.stones) > 0:
+      self.stones = (self.stones | group.stones)
     self.liberties=self.compute_liberties()
     return(self)
 
@@ -213,6 +213,7 @@ class Kifu():
   def merge_groups(self):
     _to_remove = set()
     to_ommit = set()
+    _to_add = set()
     for g1 in self.alive_groups:
       to_ommit.add(g1)
       for g2 in self.alive_groups:
@@ -223,8 +224,18 @@ class Kifu():
         elif (g2.stones <= g1.stones) and \
             g2.COLOR == g1.COLOR:
           _to_remove.add(g2)
+        elif len(g1.stones & g2.stones)>0 and \
+            g2.COLOR == g1.COLOR:
+          g2.update_board(self.board)
+          g = g2.merge(g1)
+          g.update_board(self.board)
+          _to_add.add(g)
+          _to_remove.add(g1)
+          _to_remove.add(g2)
     for _r in _to_remove:
       self.alive_groups.remove(_r)
+    for _a in _to_add:
+      self.alive_groups.add(_a)
 
   def remove_dead(self, just_played):
     for g in self.alive_groups:
@@ -243,13 +254,13 @@ class Kifu():
 
 
 
-#if __name__ == '__main__':
-#  k = Kifu('sgfs/kgs-19-2015-05-new/2015-05-27-4.sgf')
-#  b = k.starting_board()
-#  for g in k.alive_groups:
-#    print(g.COLOR, g.stones)
-#  m1 = k.get_position_at(112)
-#  print(k.print_board(m1))
-#  for g in k.alive_groups:
-#    print(g.COLOR,g.stones, len(g.liberties))
-#  print(k.dead_groups)
+if __name__ == '__main__':
+  k = Kifu('sgfs/kgs-19-2015-05-new/2015-05-27-4.sgf')
+  b = k.starting_board()
+  for g in k.alive_groups:
+    print(g.COLOR, g.stones)
+  m1 = k.get_position_at(320)
+  print(k.print_board(m1))
+  for g in k.alive_groups:
+    print(g.COLOR,g.stones, len(g.liberties))
+  print(k.dead_groups)
