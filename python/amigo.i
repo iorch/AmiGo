@@ -7,8 +7,13 @@
 %}
 
 namespace amigo {
+struct board {
+    void draw();
+};
+
 struct kifu {
     kifu(char*);
-    void print();
+    board final_board();
 };
+
 }

@@ -8,8 +8,8 @@ int main(int argc, char** argv) {
 
     std::cout << file_name << '\n';
     amigo::kifu k(file_name);
-    k.print();
-   
+    auto board = k.final_board();
+    board.draw();
 
     return 0;
 }

@@ -76,13 +76,22 @@ class kifu {
             throw std::logic_error("Unable to parse file.");
     }
 
-    void print() {
+    void sgf() {
         std::cout << "(;";
         for ( auto& x : tags_ )
             std::cout << x.first << '[' << x.second << "]\n";
         for ( auto& x : moves_ )
             std::cout << ';' << x.first.as_char() << '[' << x.second.alphabetical() << ']';
         std::cout << ")\n";
+    }
+
+    board final_board() {
+        board brd;
+
+        for (auto& move : moves_)
+            brd.move(move.first, move.second);
+        
+        return brd;
     }
 
 };
