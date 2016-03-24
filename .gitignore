@@ -1,3 +1,13 @@
+*.swp
+*.sgf
+*_x
+
+python/amigo.o
+python/amigo.py
+python/amigo_wrap.cxx
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

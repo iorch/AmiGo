@@ -1,9 +1,6 @@
 #ifndef __KIFU_H__
 #define __KIFU_H__
 
-#define BSIZE 19
-#define GOSIZE BSIZE*BSIZE
-
 #include "amigo.h"
 
 #include <fstream>
@@ -43,9 +40,9 @@ class kifu {
 
     bool parse(const std::string& game) {
         std::string game_regex(
-                 "^\\(;((?:[A-Z]{2}\\[.*\\]\\n)+)((?:;[BW]\\[[a-s]{2}\\])+)\\)[\\n]?");
-        std::string tag_regex("^([A-Z]{2})\\[(.*)\\]\\n");
-        std::string move_regex("^;([WB])\\[([a-s]{2})\\]");
+                 "^\\(;((?:[A-Z]{0,2}\\[.*?\\]\\s*)+)((?:;[BW]\\[[a-s]{0,2}\\]\\s*)*)\\)\\s*$");
+        std::string tag_regex("^([A-Z]{0,2})\\[(.*?)\\]\\s*");
+        std::string move_regex("^;([WB])\\[([a-s]{0,2})\\]\\s*");
 
         std::vector<std::pair<std::string, std::string>> game_;
         if (!parse_pairs(game, game_regex, game_))

@@ -2,6 +2,8 @@
 #define  __AMIGO_H__
 
 #include <string>
+#include <bitset>
+#include <cstring>
 #include <stdexcept>
 
 #ifdef __DOCHECK
@@ -9,6 +11,9 @@
 #else
     #define __NOEXCEPT true
 #endif
+
+#define BOARD_SIZE 19
+#define BOARD_CELS BOARD_SIZE*BOARD_SIZE
 
 namespace amigo {
 
@@ -43,11 +48,14 @@ namespace amigo {
         }
     };
 
+    class board_layer;
+
     class position {
+        friend class board_layer;
         int position_;
         
         public:
-        enum { 
+        enum { none = -1, 
      aa, ab, ac, ad, ae, af, ag, ah, ai, aj, ak, al, am, an, ao, ap, aq, ar, as,
      ba, bb, bc, bd, be, bf, bg, bh, bi, bj, bk, bl, bm, bn, bo, bp, bq, br, bs,
      ca, cb, cc, cd, ce, cf, cg, ch, ci, cj, ck, cl, cm, cn, co, cp, cq, cr, cs,
@@ -77,23 +85,84 @@ namespace amigo {
         }
 
         position(const std::string& str) {
+            if (str.size() == 0) {
+                position_ = -1;
+                return;
+            }
+
             if (str.size() != 2)
                 throw std::logic_error("Position string is malformed.");
+
             int x = str[0] - 'a';
             int y = str[1] - 'a';
-            if ( x < 0 || x > 19 || y < 0 || y > 19 )
+            if ( x < 0 || x > BOARD_SIZE || y < 0 || y > BOARD_SIZE )
                 throw std::logic_error("Position string is malformed.");
             position_ =  x * 19 + y;
         }
 
         std::string alphabetical() {
+            if ( position_ == none ) {
+                return std::string();
+            }
             std::string p(2, '\0');
-            p[0] = position_ / 19 + 'a';
-            p[1] = position_ % 19 + 'a';
+            p[0] = position_ / BOARD_SIZE + 'a';
+            p[1] = position_ % BOARD_SIZE + 'a';
             return p;
         }
     };
 
+
+    class board_layer {
+        std::bitset<BOARD_CELS> layer_;
+
+        public:
+        void place(const position& p) {
+            layer_.set(p.position_);
+        }
+
+        void remove(const position& p) {
+            layer_.reset(p.position_);
+        }
+    };
+
+    class board {
+        board_layer white_;
+        board_layer black_;
+        int moves_;
+        player turn_;
+
+        public:
+        board() : turn_(player::black), moves_(0) {}
+    };
+/*
+    class game_meta {
+        int board_size; // SZ
+        std::string white_name, black_name; // PW, PB
+        int white_ranking, black_ranking; // WR, BR
+        std::string date;
+        float komi;
+
+        GM game 1= go
+        FF file format
+        SZ board_size;
+        PW white_nickname;
+        WR white-ranking;
+        PB black_nickname;
+        BR black_ranking;
+        DT date;
+        PC server_name;
+        KM komi float something.5;
+        RE result;
+        RU rules;
+        OT overtime;
+        CA utf-8;
+        ST xx
+        AP application;
+        TM xx;
+        HA handicap #stones;
+        AB handicap positions
+    }
+*/
 } /* amigo */
 
 #endif
