@@ -4,8 +4,8 @@ MAINTAINER iorch
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
-  python-pip \
-  python-dev \
+  python3-pip \
+  python3-dev \
   swig
 
 ADD . /AmiGo
