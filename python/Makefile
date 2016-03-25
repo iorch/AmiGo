@@ -1,4 +1,3 @@
-CC=g++
 FLAGS=-std=c++11 -D__DOCHECK
 INCLUDES=-I ../include `python-config --includes`
 
