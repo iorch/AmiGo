@@ -122,8 +122,8 @@ enum {
             if (str.size() != 2)
                 throw std::logic_error("Position string is malformed.");
 
-            int x = str[0] - 'a';
-            int y = str[1] - 'a';
+            int y = str[0] - 'a';
+            int x = str[1] - 'a';
             if ( x < 0 || x > BOARD_SIZE || y < 0 || y > BOARD_SIZE )
                 throw std::logic_error("Position string is malformed.");
             position_ =  x * 19 + y;
