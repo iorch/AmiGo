@@ -1,0 +1,7 @@
+language: cpp
+compiler: gcc
+os: linux
+notifications:
+    email: magania@gmail.com
+script:
+    make test

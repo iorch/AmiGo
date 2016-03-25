@@ -4,3 +4,7 @@ INCLUDES=-I ./include
 
 test_x: test.cc include/amigo.h include/kifu.h
 	${CC} ${FLAGS} ${INCLUDES} $< -o $@
+
+
+test: test_x
+	echo "done."
