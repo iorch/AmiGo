@@ -344,7 +344,7 @@ enum {
         void merge_groups(color_groups& groups, const position& p0){
             group new_group;
             for (auto& cg : groups){
-                if (!cg.first[p0]) continue;
+                if (!cg.first[p0] && !cg.second[p0]) continue;
                 position p = position::A19;
                 do {
                     if (cg.first[p]) new_group.first.place(p);
