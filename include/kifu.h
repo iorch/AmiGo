@@ -87,10 +87,23 @@ class kifu {
 
     board final_board() {
         board brd;
-
-        for (auto& move : moves_)
+        brd.set_handicap(tags_);
+        for (auto& move : moves_){
             brd.move(move.first, move.second);
-        
+            brd.update_gropus(move.first, move.second);
+        }
+        return brd;
+    }
+
+    board position_at(int moves){
+        board brd;
+        brd.set_handicap(tags_);
+        int count = 0;
+        for (auto& move : moves_){
+            if (moves == count) break;
+            brd.move(move.first, move.second);
+            count++;
+        }
         return brd;
     }
 
