@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+#include <algorithm> // remove_if
+
 
 #ifdef __DOCHECK
     #define __NOEXCEPT false
@@ -207,6 +209,13 @@ enum {
         bool operator[] (const position& p) {
             return layer_[p.position_];
         }
+
+        bool is_empty(){
+            return layer_.count()==0;
+        }
+        int count(){
+            return layer_.count();
+        }
     };
     ///// ............ stones  .... liberties //////
     typedef std::pair < board_layer, board_layer > group;
@@ -255,23 +264,41 @@ enum {
             return groups;
         }
 
-        board_layer update_liberties( board_layer group){
-            board_layer liberties;
+        void update_liberties( group& group){
             position p = position::A19;
             do {
-                if (group[p]){
-                    if (!p.is_top() && empty_[p.up()])
-                        liberties.place(p.up());
-                    if (!p.is_bottom() && empty_[p.down()])
-                        liberties.place(p.down());
-                    if (!p.is_leftmost() && empty_[p.left()])
-                        liberties.place(p.left());
-                    if (!p.is_rightmost() && empty_[p.right()])
-                        liberties.place(p.right());
+                if (group.first[p]){
+                    if (!p.is_top()) {
+                        if (empty_[p.up()]){
+                            group.second.place(p.up());
+                        } else {
+                            group.second.remove(p.up());
+                        }
+                    }
+                    if (!p.is_bottom()) {
+                        if (empty_[p.down()]){
+                            group.second.place(p.down());
+                        } else {
+                            group.second.remove(p.down());
+                        }
+                    }
+                    if (!p.is_leftmost()) {
+                        if (empty_[p.left()]){
+                            group.second.place(p.left());
+                        } else {
+                            group.second.remove(p.left());
+                        }
+                    }
+                    if (!p.is_rightmost()) {
+                        if (empty_[p.right()]){
+                            group.second.place(p.right());
+                        } else {
+                            group.second.remove(p.right());
+                        }
+                    }
                 }
                 p.next();
             } while (!p.is_none());
-            return liberties;
         }
 
         void update_gropus(const player& py, const position& p){
@@ -286,6 +313,7 @@ enum {
                 if (!placed) {
                 create_group(black_groups_, p);
                 }
+                remove_dead(white_groups_, white_);
             } else {
                 for (auto& gw : white_groups_){
                     placed = placed || add_stone_to_group(gw ,p);
@@ -293,6 +321,7 @@ enum {
                 if (!placed) {
                 create_group(white_groups_, p);
                 }
+                remove_dead(black_groups_, black_);
             }
 
         }
@@ -301,7 +330,8 @@ enum {
             bool placed = false;
             if (g.second[p]){
                 g.first.place(p);
-                g.second = update_liberties(g.first);
+                g.second.remove(p);
+                update_liberties(g);
                 placed = true;
             }
             return placed;
@@ -310,8 +340,36 @@ enum {
         void create_group(color_groups& groups, const position& p){
             group new_group;
             new_group.first.place(p);
-            new_group.second = update_liberties(new_group.first);
+            update_liberties(new_group);
             groups.push_back(new_group);
+        }
+
+        void remove_dead( color_groups& groups, board_layer& clayer){
+            for (auto& g : black_groups_) update_liberties(g);
+            for (auto& g : white_groups_) update_liberties(g);
+            for (auto& g : groups){
+                if (!g.second.is_empty()) continue;
+                position p = position::A19;
+                do {
+                    if (g.first[p]){
+                        empty_.place(p);
+                        clayer.remove(p);
+                    }
+                    p.next();
+                } while (!p.is_none());
+            }
+            auto no_liberties = [](group& group) {
+                return group.second.is_empty();
+            };
+            groups.erase(
+                        std::remove_if(
+                                        groups.begin(),
+                                        groups.end(),
+                                        no_liberties),
+                        groups.end()
+            );
+            for (auto& g : black_groups_) update_liberties(g);
+            for (auto& g : white_groups_) update_liberties(g);
         }
 
         void draw_layer( board_layer _layer ){
