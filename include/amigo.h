@@ -313,6 +313,7 @@ enum {
                 if (!placed) {
                 create_group(black_groups_, p);
                 }
+                merge_groups(black_groups_, p);
                 remove_dead(white_groups_, white_);
             } else {
                 for (auto& gw : white_groups_){
@@ -321,9 +322,41 @@ enum {
                 if (!placed) {
                 create_group(white_groups_, p);
                 }
+                merge_groups(white_groups_, p);
                 remove_dead(black_groups_, black_);
             }
 
+        }
+
+        void merge_groups(color_groups& groups, const position& p0){
+            group new_group;
+            for (auto& cg : groups){
+                if (!cg.first[p0]) continue;
+                position p = position::A19;
+                do {
+                    if (cg.first[p]) new_group.first.place(p);
+                    p.next();
+                } while (!p.is_none());
+            }
+            update_liberties(new_group);
+            auto merging = [&](group g1) {
+                position p = position::A19;
+                bool m = false;
+                do {
+                    if (new_group.first[p])
+                        m = m || (new_group.first[p] == g1.first[p]);
+                    p.next();
+                } while (!p.is_none());
+                return m;
+            };
+            groups.erase(
+                        std::remove_if(
+                                        groups.begin(),
+                                        groups.end(),
+                                        merging),
+                        groups.end()
+            );
+            groups.push_back(new_group);
         }
 
         bool add_stone_to_group(group& g, const position& p){
