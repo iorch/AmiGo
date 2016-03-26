@@ -18,6 +18,7 @@
 
 #define BOARD_SIZE 19
 #define BOARD_CELS BOARD_SIZE*BOARD_SIZE
+#define NPOSITIONS (BOARD_CELS + 1)
 
 namespace amigo {
 
@@ -44,6 +45,13 @@ namespace amigo {
                 player_ = white;
             else
                 throw std::logic_error("Player string is malformed");
+        }
+
+        void toggle() {
+            if (player_ == white)
+                player_ = black;
+            else
+                player_ = white;
         }
 
         char as_char() {
@@ -108,9 +116,13 @@ enum {
    A1, B1, C1, D1, E1, F1, G1, H1, J1, K1, L1, M1, N1, O1, P1, Q1, R1, S1, T1
 };
 
+        position() noexcept : position_(NONE) {}
+
         position(int p) noexcept(__NOEXCEPT) : position_(p)
         {
 #ifdef __DOCHECK
+            if ( p == NONE )
+                return;
             if ( p < aa || p > ss )
                 throw std::logic_error("Position is invalid.");
 #endif
@@ -132,7 +144,7 @@ enum {
             position_ =  x * 19 + y;
         }
 
-        std::string alphabetical() {
+        std::string alphabetical() const {
             if ( position_ == none ) {
                 return std::string();
             }
@@ -235,6 +247,7 @@ enum {
         board() : turn_(player::black), moves_(0), empty_(1) {}
 
         void move(const player& py, const position& p) {
+            ++moves_;
             if (p.is_none())
                 return;
 
@@ -418,21 +431,35 @@ enum {
             } while (!p.is_none());
         }
 
+        void move(const position& p) {
+            move(turn_, p);
+            turn_.toggle();
+        }
+
         void draw() {
+            std::printf("+--+---------------------------------------+\n");
+            std::printf("|   move =  %03d    turn = %c                |\n", moves_, turn_.as_char() );
+            std::printf("|    A B C D E F G H J K L M N O P Q R S T |\n"); 
+            std::printf("+--+---------------------------------------+\n");
             position p = position::A19;
+            int row = 19;
             do {
+                if (p.is_leftmost())
+                    std::printf("|%02d| ", row--);
+
                 if (white_[p])
-                    std::cout << 'W';
+                    std::printf("⚆ ");
                 if (black_[p])
-                    std::cout << 'B';
+                    std::printf("● ");
                 if (empty_[p])
-                    std::cout << '.';
+                    std::printf("· ");
 
                 if (p.is_rightmost())
-                    std::cout << '\n';
+                    std::printf("|\n");
 
                 p.next();
             } while (!p.is_none());
+            std::printf("+--+---------------------------------------+\n");
         }
     };
 
