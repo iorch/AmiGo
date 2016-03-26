@@ -258,10 +258,10 @@ enum {
             position p = position::A19;
             do {
                 if (group[p]){
-                    if (empty_[p.up()]) liberties.place(p.up());
-                    if (empty_[p.down()]) liberties.place(p.down());
-                    if (empty_[p.left()]) liberties.place(p.left());
-                    if (empty_[p.right()]) liberties.place(p.right());
+                    if (!p.is_top() && empty_[p.up()]) liberties.place(p.up());
+                    if (!p.is_bottom() && empty_[p.down()]) liberties.place(p.down());
+                    if (!p.is_leftmost() && empty_[p.left()]) liberties.place(p.left());
+                    if (!p.is_rightmost() && empty_[p.right()]) liberties.place(p.right());
                 }
                 p.next();
             } while (!p.is_none());
