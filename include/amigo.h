@@ -6,6 +6,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
+#include <vector>
 
 #ifdef __DOCHECK
     #define __NOEXCEPT false
@@ -22,7 +23,7 @@ namespace amigo {
         char player_;
 
         public:
-        enum static_player { white = 'W', black = 'B' }; 
+        enum static_player { white = 'W', black = 'B' };
 
         player(char c) noexcept(__NOEXCEPT) : player_(c)
         {
@@ -57,7 +58,7 @@ namespace amigo {
     class position {
         friend class board_layer;
         int position_;
-        
+
         public:
 enum {
    none = -1,
@@ -212,6 +213,10 @@ enum {
         board_layer white_;
         board_layer black_;
         board_layer empty_;
+        ///// .................. stones  .... liberties //////
+        std::vector< std::pair< board_layer, board_layer > > black_groups;
+        std::vector< std::pair< board_layer, board_layer > > white_groups;
+
         int moves_;
         player turn_;
 
@@ -228,6 +233,85 @@ enum {
                 white_.place(p);
 
             empty_.remove(p);
+            update_gropus( py, p );
+        }
+
+        std::vector< std::pair< board_layer, board_layer > >  get_groups(std::string color){
+            std::vector< std::pair< board_layer, board_layer > > groups;
+            if (color == "black"){
+                groups = black_groups;
+            } else {
+                groups = white_groups;
+            }
+            return groups;
+        }
+
+        board_layer update_liberties( board_layer group){
+            board_layer liberties;
+            position p = position::A19;
+            do {
+                if (group[p]){
+                    if (empty_[p.up()]) liberties.place(p.up());
+                    if (empty_[p.down()]) liberties.place(p.down());
+                    if (empty_[p.left()]) liberties.place(p.left());
+                    if (empty_[p.right()]) liberties.place(p.right());
+                }
+                p.next();
+            } while (!p.is_none());
+            return liberties;
+        }
+
+        void update_gropus(const player& py, const position& p){
+            bool placed = false;
+            bool result = false;
+            if (p.is_none())
+                return;
+            if (py == player::black){
+                for (auto& gb : black_groups){
+                    result = add_stone_to_group(gb,p);
+                }
+                if (!placed) {
+                create_group(black_groups, p);
+                }
+            } else {
+                for (auto& gw : white_groups){
+                    placed = placed || add_stone_to_group(gw ,p);
+                }
+                if (!placed) {
+                create_group(white_groups, p);
+                }
+            }
+
+        }
+
+        bool add_stone_to_group(std::pair< board_layer, board_layer >& g, const position& p){
+            bool placed = false;
+            if (g.second[p]){
+                g.first.place(p);
+                g.second = update_liberties(g.first);
+                placed = true;
+            }
+            return placed;
+        }
+
+        void create_group(std::vector< std::pair< board_layer, board_layer > >& groups, const position& p){
+            std::pair< board_layer, board_layer >  new_group;
+            new_group.first.place(p);
+            new_group.second = update_liberties(new_group.first);
+            groups.push_back(new_group);
+        }
+
+        void draw_layer( board_layer _layer ){
+            position p = position::A19;
+            do {
+                if (_layer[p])
+                    std::cout << '[' << p.alphabetical() <<']';
+                if (!_layer[p])
+                    std::cout << " .. ";
+                if (p.is_rightmost())
+                    std::cout << '\n';
+                p.next();
+            } while (!p.is_none());
         }
 
         void draw() {
@@ -247,6 +331,7 @@ enum {
             } while (!p.is_none());
         }
     };
+
 /*
     class game_meta {
         int board_size; // SZ
