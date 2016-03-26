@@ -236,6 +236,13 @@ enum {
             update_gropus( py, p );
         }
 
+        void set_handicap(std::vector<std::pair<std::string, std::string>> tags_){
+            for ( auto& x : tags_ ){
+                if (x.first == "AB" || x.first == "")
+                move(player::black, position(x.second));
+            }
+        }
+
         std::vector< std::pair< board_layer, board_layer > >  get_groups(std::string color){
             std::vector< std::pair< board_layer, board_layer > > groups;
             if (color == "black"){
