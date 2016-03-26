@@ -208,14 +208,16 @@ enum {
             return layer_[p.position_];
         }
     };
+    ///// ............ stones  .... liberties //////
+    typedef std::pair < board_layer, board_layer > group;
+    typedef std::vector < group > color_groups;
 
     class board {
         board_layer white_;
         board_layer black_;
         board_layer empty_;
-        ///// .................. stones  .... liberties //////
-        std::vector< std::pair< board_layer, board_layer > > black_groups;
-        std::vector< std::pair< board_layer, board_layer > > white_groups;
+        color_groups black_groups_;
+        color_groups white_groups_;
 
         int moves_;
         player turn_;
@@ -243,12 +245,12 @@ enum {
             }
         }
 
-        std::vector< std::pair< board_layer, board_layer > >  get_groups(std::string color){
-            std::vector< std::pair< board_layer, board_layer > > groups;
+        color_groups  get_groups(std::string color){
+            color_groups groups;
             if (color == "black"){
-                groups = black_groups;
+                groups = black_groups_;
             } else {
-                groups = white_groups;
+                groups = white_groups_;
             }
             return groups;
         }
@@ -258,10 +260,14 @@ enum {
             position p = position::A19;
             do {
                 if (group[p]){
-                    if (!p.is_top() && empty_[p.up()]) liberties.place(p.up());
-                    if (!p.is_bottom() && empty_[p.down()]) liberties.place(p.down());
-                    if (!p.is_leftmost() && empty_[p.left()]) liberties.place(p.left());
-                    if (!p.is_rightmost() && empty_[p.right()]) liberties.place(p.right());
+                    if (!p.is_top() && empty_[p.up()])
+                        liberties.place(p.up());
+                    if (!p.is_bottom() && empty_[p.down()])
+                        liberties.place(p.down());
+                    if (!p.is_leftmost() && empty_[p.left()])
+                        liberties.place(p.left());
+                    if (!p.is_rightmost() && empty_[p.right()])
+                        liberties.place(p.right());
                 }
                 p.next();
             } while (!p.is_none());
@@ -274,24 +280,24 @@ enum {
             if (p.is_none())
                 return;
             if (py == player::black){
-                for (auto& gb : black_groups){
+                for (auto& gb : black_groups_){
                     result = add_stone_to_group(gb,p);
                 }
                 if (!placed) {
-                create_group(black_groups, p);
+                create_group(black_groups_, p);
                 }
             } else {
-                for (auto& gw : white_groups){
+                for (auto& gw : white_groups_){
                     placed = placed || add_stone_to_group(gw ,p);
                 }
                 if (!placed) {
-                create_group(white_groups, p);
+                create_group(white_groups_, p);
                 }
             }
 
         }
 
-        bool add_stone_to_group(std::pair< board_layer, board_layer >& g, const position& p){
+        bool add_stone_to_group(group& g, const position& p){
             bool placed = false;
             if (g.second[p]){
                 g.first.place(p);
@@ -301,8 +307,8 @@ enum {
             return placed;
         }
 
-        void create_group(std::vector< std::pair< board_layer, board_layer > >& groups, const position& p){
-            std::pair< board_layer, board_layer >  new_group;
+        void create_group(color_groups& groups, const position& p){
+            group new_group;
             new_group.first.place(p);
             new_group.second = update_liberties(new_group.first);
             groups.push_back(new_group);
