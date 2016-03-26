@@ -1,6 +1,7 @@
 #include "amigo.h"
 #include "kifu.h"
 #include "policy.h"
+#include "value.h"
 #include "engine.h"
 
 

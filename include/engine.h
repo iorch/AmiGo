@@ -6,6 +6,9 @@
 namespace amigo {
 
 class engine {
+    policy policy_;
+    gut    value_;
+
     struct node_;
     using shared_node_ = std::shared_ptr<node_>;
 
@@ -15,42 +18,55 @@ class engine {
     // (with 3 layers);
     struct node_ {
         const board state;
+        const float value;
         const std::array<priority_, NPOSITIONS> priorities;
         std::array<shared_node_, NPOSITIONS> children;
 
-        node_(const board& brd, policy& policy_) :
-            state(brd), priorities(policy_.evaluate(brd)) {}
+        node_(const board& brd, gut& v, policy& p) :
+            state(brd),
+            value(v.evaluate(brd)),
+            priorities(p.evaluate(brd)) {}
     };
 
     shared_node_  root_;
-    policy policy_;
+
+    shared_node_ make_shared_node_(const board& b) {
+        return std::make_shared<node_>(b, value_, policy_);
+    }
 
 
-    void expand(shared_node_& node, int deep) {
-        if (deep < 0 )
-            return;
+    /* Deep first search up to deep considering only priority > priority_cut
+     * */
+    int explore(shared_node_& node, int deep, float priority_cut) {
+        int expanded = 0;
+
+        if (deep <= 0 )
+            return expanded;
 
         for (int i = 0; i < NPOSITIONS; ++i ) {
             auto& pos  = node->priorities[i].pos;
-            auto& val  = node->priorities[i].val;
-            if (val < 0.99) break;
+            auto& pri  = node->priorities[i].pri;
+            if (pri < priority_cut) break;
 
             auto& child = node->children[i];
             if (!child.use_count()) {
                 board bxard = node->state;  // Make a copy;
                 bxard.move(pos);
-                bxard.draw();
-                child = std::make_shared<node_>(bxard, policy_);
-                expand( child, deep - 1 );
+                child = make_shared_node_(bxard);
+                ++expanded;
             }
+            expanded += explore(child, deep - 1, priority_cut);
         }
+
+        return expanded;
     } 
 
     public:
-    engine() : policy_() ,root_(std::make_shared<node_>(board(), policy_)) {}
+    engine() : root_(make_shared_node_(board())) {}
 
     void think() {
-        expand( root_, 20 );
+        int expanded = explore( root_, 5, 0.97 );
+        std::cout << "expanded = " << expanded << '\n';
     }
 
 

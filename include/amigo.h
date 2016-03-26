@@ -249,29 +249,29 @@ enum {
         }
 
         void draw() {
-            std::cout << "+-------------------+\n";
-            std::cout << "|  " << moves_ << "  " 
-                      << turn_.as_char() << "             |\n";
-            std::cout << "|ABCDEFGHJKLMNOPQRST|\n"; 
-            std::cout << "+-------------------+\n";
+            std::printf("+--+---------------------------------------+\n");
+            std::printf("|   move =  %03d    turn = %c                |\n", moves_, turn_.as_char() );
+            std::printf("|    A B C D E F G H J K L M N O P Q R S T |\n"); 
+            std::printf("+--+---------------------------------------+\n");
             position p = position::A19;
+            int row = 19;
             do {
                 if (p.is_leftmost())
-                    std::cout << "|";
+                    std::printf("|%02d| ", row--);
 
                 if (white_[p])
-                    std::cout << 'W';
+                    std::printf("⚆ ");
                 if (black_[p])
-                    std::cout << 'B';
+                    std::printf("● ");
                 if (empty_[p])
-                    std::cout << '.';
+                    std::printf("· ");
 
                 if (p.is_rightmost())
-                    std::cout << "|\n";
+                    std::printf("|\n");
 
                 p.next();
             } while (!p.is_none());
-            std::cout << "+-------------------+\n";
+            std::printf("+--+---------------------------------------+\n");
         }
     };
 /*
