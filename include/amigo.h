@@ -240,8 +240,11 @@ enum {
         color_groups black_groups_;
         color_groups white_groups_;
 
+        int white_captures = 0;
+        int black_captures = 0;
         int moves_;
         player turn_;
+        float komi_;
 
         public:
         board() : turn_(player::black), moves_(0), empty_(1) {}
@@ -258,13 +261,19 @@ enum {
 
             empty_.remove(p);
             update_gropus( py, p );
+            turn_.toggle();
         }
 
         void set_handicap(std::vector<std::pair<std::string, std::string>> tags_){
+            int h_ = 0;
             for ( auto& x : tags_ ){
+                if (x.first == "HA") h_ = std::stoi(x.second);
+                if (x.first == "KM") komi_ = std::stof(x.second);
                 if (x.first == "AB" || x.first == "")
                 move(player::black, position(x.second));
             }
+            moves_ = moves_ - h_;
+            if (turn_.as_char() == 'B') turn_.toggle();
         }
 
         color_groups  get_groups(std::string color){
@@ -327,7 +336,7 @@ enum {
                 create_group(black_groups_, p);
                 }
                 merge_groups(black_groups_, p);
-                remove_dead(white_groups_, white_);
+                remove_dead(white_groups_, white_,black_captures);
             } else {
                 for (auto& gw : white_groups_){
                     placed = placed || add_stone_to_group(gw ,p);
@@ -336,7 +345,7 @@ enum {
                 create_group(white_groups_, p);
                 }
                 merge_groups(white_groups_, p);
-                remove_dead(black_groups_, black_);
+                remove_dead(black_groups_, black_,white_captures);
             }
 
         }
@@ -390,7 +399,7 @@ enum {
             groups.push_back(new_group);
         }
 
-        void remove_dead( color_groups& groups, board_layer& clayer){
+        void remove_dead( color_groups& groups, board_layer& clayer, int& captures){
             for (auto& g : black_groups_) update_liberties(g);
             for (auto& g : white_groups_) update_liberties(g);
             for (auto& g : groups){
@@ -399,6 +408,7 @@ enum {
                 do {
                     if (g.first[p]){
                         empty_.place(p);
+                        if (clayer[p]) captures++;
                         clayer.remove(p);
                     }
                     p.next();
@@ -421,6 +431,7 @@ enum {
         void draw_layer( board_layer _layer ){
             std::printf("+--+---------------------------------------+\n");
             std::printf("|   move =  %03d    turn = %c                |\n", moves_, turn_.as_char() );
+            std::printf("|  W captures = %03d   B captures = %03d     |\n", white_captures, black_captures );
             std::printf("|    A B C D E F G H J K L M N O P Q R S T |\n");
             std::printf("+--+---------------------------------------+\n");
             position p = position::A19;
@@ -448,6 +459,7 @@ enum {
         void draw() {
             std::printf("+--+---------------------------------------+\n");
             std::printf("|   move =  %03d    turn = %c                |\n", moves_, turn_.as_char() );
+            std::printf("|  W captures = %03d     B captures = %03d   |\n", white_captures, black_captures );
             std::printf("|    A B C D E F G H J K L M N O P Q R S T |\n");
             std::printf("+--+---------------------------------------+\n");
             position p = position::A19;
