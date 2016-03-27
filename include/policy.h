@@ -4,6 +4,8 @@
 #include "amigo.h"
 
 #include <random>
+#include <array>
+#include <algorithm>
 
 namespace amigo {
 
@@ -11,7 +13,7 @@ struct priority_ {
     position pos;
     float pri;
 
-    bool operator< (const priority_& other) {
+    bool operator< (const priority_& other ) const {
         return this->pri > other.pri;        // High priority is sorted first.
     }
 };

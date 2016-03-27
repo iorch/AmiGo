@@ -2,6 +2,7 @@
 #define __ENGINE_H__
 
 #include "amigo.h"
+#include <array>
 
 namespace amigo {
 
@@ -59,7 +60,7 @@ class engine {
         }
 
         return expanded;
-    } 
+    }
 
     public:
     engine() : root_(make_shared_node_(board())) {}
