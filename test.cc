@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
 
     std::cout << file_name << '\n';
     amigo::kifu k(file_name);
-    auto board = k.position_at(12);
+    auto board = k.position_at(13);
     board.draw();
 
 //    amigo::engine e;

@@ -273,7 +273,7 @@ enum {
                 move(player::black, position(x.second));
             }
             moves_ = moves_ - h_;
-            if (turn_.as_char() == 'B') turn_.toggle();
+            if (turn_.as_char() == 'B' && h_ > 0) turn_.toggle();
         }
 
         color_groups  get_groups(std::string color){
