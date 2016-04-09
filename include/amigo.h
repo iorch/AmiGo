@@ -202,7 +202,7 @@ enum {
         }
     };
 
-    class features;
+    class boardfeatures;
 
     class board_layer {
         std::bitset<BOARD_CELS> layer_;
@@ -235,7 +235,7 @@ enum {
     typedef std::vector < group > color_groups;
 
     class board {
-        friend class features;
+        friend class boardfeatures;
         board_layer white_;
         board_layer black_;
         board_layer empty_;
