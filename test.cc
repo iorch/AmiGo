@@ -13,11 +13,11 @@ int main(int argc, char** argv) {
 
     std::cout << file_name << '\n';
     amigo::kifu k(file_name);
-    auto board = k.position_at(13);
+    auto board = k.position_at(12);
     board.draw();
 
-    //amigo::boardfeatures f(board);
-    //board.draw_layer(f.empty());
+    amigo::boardfeatures f(board);
+    board.draw_layer(f.get_capture_ladders());
 
 
     //amigo::engine e;
