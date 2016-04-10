@@ -229,6 +229,14 @@ enum {
         int count(){
             return layer_.count();
         }
+        position first(){
+            position p = position::A19;
+            do {
+                if (layer_[p.position_]) break;
+                p.next();
+            } while (!p.is_none());
+            return(p);
+        }
     };
     ///// ............ stones  .... liberties //////
     typedef std::pair < board_layer, board_layer > group;
@@ -430,6 +438,18 @@ enum {
             for (auto& g : white_groups_) update_liberties(g);
         }
 
+        group get_group_at(player pl,const position& p){
+            auto contains_stone = [&](group g) {
+                return ( g.first[p] );
+            };
+            auto gr = white_groups_;
+            if (pl == player::black) {
+                auto gr = black_groups_;
+            }
+            auto it = std::find_if(gr.begin(), gr.end(), contains_stone);
+            return( *it );
+        }
+
         void draw_layer( board_layer _layer ){
             std::printf("+--+---------------------------------------+\n");
             std::printf("|   move =  %03d    turn = %c                |\n", moves_, turn_.as_char() );
@@ -455,7 +475,7 @@ enum {
 
         void move(const position& p) {
             move(turn_, p);
-            turn_.toggle();
+            //turn_.toggle();
         }
 
         void draw() {
