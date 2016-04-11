@@ -242,6 +242,16 @@ enum {
     typedef std::pair < board_layer, board_layer > group;
     typedef std::vector < group > color_groups;
 
+    auto current_liberties = [](group g){
+        std::vector<position> _liberties;
+        position _p = position::A19;
+        do{
+            if (g.second[_p]) _liberties.push_back(_p);
+            _p.next();
+        } while (!_p.is_none());
+        return (_liberties);
+    };
+
     class board {
         friend class boardfeatures;
         board_layer white_;
@@ -272,6 +282,20 @@ enum {
             empty_.remove(p);
             update_gropus( py, p );
             turn_.toggle();
+        }
+
+        bool is_legal(const player& py, const position& p){
+            bool _is_legal = false;
+            for (auto& itgg_ : get_groups_with_liberty(py, p)){
+                if (current_liberties(itgg_).size() > 1) _is_legal = true;
+            }
+            return(_is_legal);
+        }
+
+        std::string next_to_play(){
+            std::string color = "black";
+            if (turn_ == player::white) color = "white";
+            return(color);
         }
 
         void set_handicap(std::vector<std::pair<std::string, std::string>> tags_){
@@ -448,6 +472,20 @@ enum {
             }
             auto it = std::find_if(gr.begin(), gr.end(), contains_stone);
             return( *it );
+        }
+
+        color_groups get_groups_with_liberty(player pl,const position& p){
+            color_groups lg_;
+            auto is_liberty = [&](group g) {
+                return ( g.second[p] );
+            };
+            auto gr = white_groups_;
+            if (pl == player::black) {
+                auto gr = black_groups_;
+            }
+            auto it = std::find_if(gr.begin(), gr.end(), is_liberty);
+            lg_.push_back(*it);
+            return( lg_ );
         }
 
         void draw_layer( board_layer _layer ){

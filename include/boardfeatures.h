@@ -23,8 +23,8 @@ namespace amigo {
             board_layer ones_;
             position p = position::A19;
             do {
-                    ones_.place(p);
-                    p.next();
+                ones_.place(p);
+                p.next();
             } while (!p.is_none());
             return ones_;
         }
@@ -42,7 +42,22 @@ namespace amigo {
         }
 
         //********    W   I   P    *******
-        group get_capture_ladders(){
+        board_layer capture_ladder(){
+            board_layer cl;
+            position p = position::A19;
+            do {
+                if (board_.empty_[p]){
+                    if (is_capture_ladder(p)){
+                        cl.place(p);
+                    }
+                }
+                p.next();
+
+            } while (!p.is_none());
+            return cl;
+        }
+
+        bool is_capture_ladder(const position& _ptest){
             /*
             - [X]  look for enemy groups with 2 liberties
             - [X]  loop over those groups and liberties
@@ -53,52 +68,37 @@ namespace amigo {
             - [] check for following cases:
                 * more than 2 liberties: escape, ladder fails
                 * 2 liberties, fill one liberty, ....
-                * 1 liberty, ladder succed
+                * 1 liberty, ladder succeed
             */
-
+            bool is_ladder = false;
             group ladder_;
-            board_layer own_layer_;
-            board_layer opponent_layer_;
             board_layer empty_layer_;
             color_groups groups_;
             std::vector<position> threats;
 
-            // if it is white's trun
+            // if it is white's turn
             groups_ = board_.black_groups_; // groups to kill
-            own_layer_ = board_.white_;
-            opponent_layer_ = board_.black_;
             empty_layer_ = board_.empty_;
             player opponent = player::black;
 
             if (board_.turn_ == player::black) {
                 opponent = player::white;
                 groups_ = board_.white_groups_;
-                own_layer_ = board_.black_;
-                opponent_layer_ = board_.white_;
             }
             color_groups ladders_;//(groups_.size()); // get possible ladders
 
-            position p = position::A19;
+            position p0 = position::A19;
             auto has_two_liberties = [&](group g) {
-                return (g.second[p] && g.second.count() ==2);
+                return (g.second[p0] && g.second.count() ==2);
             };
             //auto is_last_liberty = [&](group g){
-            //    return g.second[p] && g.second.count() ==1;
+            //    return g.second[p0] && g.second.count() ==1;
             //};
             //auto is_stone_in_group = [&](position p, group g){
-            //    return ( g.first[p] );
+            //    return ( g.first[p0] );
             //};
             auto is_liberty_group = [](position p, group g){
                 return ( g.second[p] );
-            };
-            auto current_liberties = [](group g){
-                std::vector<position> _liberties;
-                position _p = position::A19;
-                do{
-                    if (g.second[_p]) _liberties.push_back(_p);
-                    _p.next();
-                } while (!_p.is_none());
-                return (_liberties);
             };
             // look for threatened groups, and threatening positions
             //auto it = ladders_.begin();
@@ -106,20 +106,24 @@ namespace amigo {
             do {
                 group_inc = false;
                 for (auto& g: ladders_){
-                    group_inc = group_inc || is_liberty_group( p, g );
+                    group_inc = group_inc || is_liberty_group( p0, g );
                 }
-                if ( !empty_layer_[p] || group_inc) {
-                    p.next();
+                if ( !empty_layer_[p0] || group_inc) {
+                    p0.next();
                     continue;
                 }
                 auto it = std::copy_if( groups_.begin(),
                                     groups_.end(),
                                     back_inserter(ladders_),
                                     has_two_liberties );
-                threats.push_back(p);
-                p.next();
-            } while (!p.is_none());
-            //ladders_.resize( std::distance( ladders_.begin(), it ) );
+                threats.push_back(p0);
+                p0.next();
+            } while (!p0.is_none());
+            auto compare_position = [&](position _p){
+                return ( _ptest.alphabetical() == _p.alphabetical() );
+            };
+            auto _is_ptest_threat = std::find_if(threats.begin(),threats.end(),compare_position);
+            if (std::distance(_is_ptest_threat,threats.end())==0) return(false);
             std::vector<position> liberties;
             std::vector<position> liberties_tmp;
             int nliberties = liberties.size();
@@ -133,16 +137,29 @@ namespace amigo {
                 _g = tmp_board.get_group_at(opponent,g.first.first());
                 liberties = current_liberties(_g);
                 nliberties = liberties.size();
+                bool first_stone = true;
                 while (nliberties == 2){
                     nliberties = 3;
                     _g = tmp_board.get_group_at(opponent,g.first.first());
                     liberties = current_liberties(_g);
                     lit = liberties.begin();
                     for (;lit != liberties.end(); ++lit){
+                        tmp_board.draw();
+                        std::cout << "test" << std::endl;
+                        std::cout << (*lit).alphabetical() << std::endl;
                         _tmp_board_ = tmp_board;
-                        if ((*lit).is_none() || !_tmp_board_.empty_[*lit]) continue;
+                        //if ((*lit).is_none() || !_tmp_board_.empty_[*lit]) continue;
                         _g = _tmp_board_.get_group_at(opponent,g.first.first());
-                        _tmp_board_.move(*lit);
+                        if ( first_stone ){
+                            _tmp_board_.move(_ptest);
+                            first_stone = false;
+                        } else {
+                            if (!_tmp_board_.is_legal(tmp_board.turn_, *lit)) {
+                                continue;
+                            }
+                            _tmp_board_.move(*lit);
+                        }
+                        _tmp_board_.draw();
                         _g = _tmp_board_.get_group_at(opponent,g.first.first());
                         liberties_tmp = current_liberties(_g);
                         lit_tmp = liberties_tmp.begin();
@@ -170,11 +187,12 @@ namespace amigo {
                             if (nliberties == 1) break;
                         }
                     }
+                    first_stone = false;
                 }
-                tmp_board.draw();
                 ladder_ = _g;
             }
-            return ladder_;
+            is_ladder = is_ladder || current_liberties(ladder_).size()==1;
+            return is_ladder;
         }
 
     };
